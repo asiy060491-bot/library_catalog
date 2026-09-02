@@ -1,7 +1,7 @@
 """
 Dependency Injection контейнер для API.
 
-Содержит фабрики для создания сервисов.
+Содержит фабрики для создания сервисов и репозиториев.
 Использует FastAPI Depends для внедрения зависимостей.
 """
 
@@ -9,60 +9,68 @@ from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.config import settings
+from ..core.database import get_db
+from ..data.repositories.book_repository import BookRepository
 from ..domain.services.book_service import BookService
-from ..external.openlibrary import OpenLibraryClient
+from ..external.openlibrary.client import OpenLibraryClient
+from ..core.config import settings
 
 
 # ========== EXTERNAL CLIENTS (Singletons) ==========
 
-@lru_cache(maxsize=1)
+@lru_cache
 def get_openlibrary_client() -> OpenLibraryClient:
     """
     Получить singleton OpenLibraryClient.
 
-    lru_cache создает клиент один раз и переиспользует его
-    для всех последующих запросов.
-
-    Returns:
-        OpenLibraryClient: Экземпляр клиента Open Library
+    lru_cache создает клиент один раз и переиспользует.
     """
     return OpenLibraryClient(
         base_url=settings.openlibrary_base_url,
         timeout=settings.openlibrary_timeout,
-        retries=settings.openlibrary_retries,
     )
 
 
 # ========== REPOSITORIES ==========
 
-# TODO: Будет добавлено в задании с БД
-# async def get_book_repository(...)
+async def get_book_repository(
+    db: Annotated[AsyncSession, Depends(get_db)]
+) -> BookRepository:
+    """
+    Создать BookRepository для текущей сессии БД.
+
+    Создается новый экземпляр для каждого запроса.
+    """
+    return BookRepository(db)
 
 
 # ========== SERVICES ==========
 
 async def get_book_service(
-        ol_client: Annotated[OpenLibraryClient, Depends(get_openlibrary_client)],
+    book_repo: Annotated[BookRepository, Depends(get_book_repository)],
+    ol_client: Annotated[OpenLibraryClient, Depends(get_openlibrary_client)],
 ) -> BookService:
     """
     Создать BookService с внедренными зависимостями.
 
-    Args:
-        ol_client: Клиент Open Library
-
-    Returns:
-        BookService: Экземпляр сервиса книг
+    FastAPI автоматически разрешит все зависимости:
+    1. get_db() создаст AsyncSession
+    2. get_book_repository() создаст BookRepository с session
+    3. get_openlibrary_client() вернет singleton клиент
+    4. Все внедрится в BookService
     """
-    # TODO: Добавить book_repository когда будет готова БД
     return BookService(
-        book_repository=None,  # Временно None
+        book_repository=book_repo,
         openlibrary_client=ol_client,
     )
 
 
 # ========== TYPE ALIASES ДЛЯ УДОБСТВА ==========
 
+# Можно использовать в роутерах так:
+# async def my_route(service: BookServiceDep):
 BookServiceDep = Annotated[BookService, Depends(get_book_service)]
-OpenLibraryClientDep = Annotated[OpenLibraryClient, Depends(get_openlibrary_client)]
+BookRepoDep = Annotated[BookRepository, Depends(get_book_repository)]
+DbSessionDep = Annotated[AsyncSession, Depends(get_db)]
