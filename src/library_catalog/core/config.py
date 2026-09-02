@@ -2,7 +2,7 @@
 Конфигурация приложения.
 """
 
-from typing import Optional
+from typing import Optional, List
 from pydantic_settings import BaseSettings
 
 
@@ -11,17 +11,23 @@ class Settings(BaseSettings):
     Настройки приложения.
     """
 
-    # Environment
-    environment: str = "development"
+    # Application
+    app_name: str = "Library Catalog API"
     debug: bool = True
+    environment: str = "development"
     log_level: str = "INFO"
+
+    # API
+    api_v1_prefix: str = "/api/v1"
+    docs_url: str = "/docs"
+    redoc_url: str = "/redoc"
+
+    # CORS
+    cors_origins: List[str] = ["*"]
 
     # Database
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/library_catalog"
     database_pool_size: int = 5
-
-    # API
-    api_v1_prefix: str = "/api/v1"
 
     # OpenLibrary
     openlibrary_base_url: str = "https://openlibrary.org"
@@ -32,12 +38,12 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
-        # Разрешаем любые дополнительные поля, если они есть в .env
         extra = "ignore"
 
 
 # Создаем экземпляр настроек
 settings = Settings()
+
 
 __all__ = [
     "settings",

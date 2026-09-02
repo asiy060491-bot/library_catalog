@@ -59,6 +59,7 @@ async def check_db_connection() -> bool:
 
 
 async def dispose_engine() -> None:
+    """Закрыть все соединения с БД."""
     await engine.dispose()
 
 
@@ -71,3 +72,5 @@ __all__ = [
     "check_db_connection",
     "dispose_engine",
 ]
+
+
