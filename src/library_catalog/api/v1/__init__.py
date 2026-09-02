@@ -2,6 +2,7 @@
 API версии 1.
 """
 
+from .router import router
 from .schemas import (
     BookBase,
     BookCreate,
@@ -15,6 +16,7 @@ from .schemas import (
 )
 
 __all__ = [
+    "router",
     "BookBase",
     "BookCreate",
     "BookUpdate",
