@@ -41,10 +41,11 @@ async def test_create_book_invalid_data(client, setup_database):
         "genre": "Test",
         "pages": 100,
     }
-    
+
     response = await client.post("/api/v1/books/", json=invalid_data)
-    
-    assert response.status_code == 400
+
+    # Pydantic возвращает 422 для ошибок валидации
+    assert response.status_code == 422
 
 
 @pytest.mark.asyncio

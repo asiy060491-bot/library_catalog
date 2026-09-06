@@ -43,28 +43,29 @@ async def test_create_book_duplicate_isbn(book_service, sample_book_data, setup_
 async def test_create_book_invalid_year(book_service, sample_book_data, setup_database):
     """Тест создания книги с невалидным годом."""
     from src.library_catalog.api.v1.schemas.book import BookCreate
-    
+    from src.library_catalog.domain.exceptions import InvalidYearException
+
     invalid_data = sample_book_data.copy()
     invalid_data["year"] = 3000  # Невалидный год
-    
-    book_create = BookCreate(**invalid_data)
-    
-    with pytest.raises(InvalidYearException):
-        await book_service.create_book(book_create)
+
+    # Pydantic уже валидирует, поэтому мы ожидаем ValidationError
+    import pydantic_core
+    with pytest.raises(pydantic_core.ValidationError):
+        BookCreate(**invalid_data)
 
 
 @pytest.mark.asyncio
 async def test_create_book_invalid_pages(book_service, sample_book_data, setup_database):
     """Тест создания книги с невалидным количеством страниц."""
     from src.library_catalog.api.v1.schemas.book import BookCreate
-    
+
     invalid_data = sample_book_data.copy()
     invalid_data["pages"] = -10  # Невалидное количество страниц
-    
-    book_create = BookCreate(**invalid_data)
-    
-    with pytest.raises(InvalidPagesException):
-        await book_service.create_book(book_create)
+
+    # Pydantic уже валидирует, поэтому мы ожидаем ValidationError
+    import pydantic_core
+    with pytest.raises(pydantic_core.ValidationError):
+        BookCreate(**invalid_data)
 
 
 @pytest.mark.asyncio

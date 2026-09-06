@@ -3,8 +3,9 @@
 """
 
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.pool import StaticPool
 
 from src.library_catalog.main import app
 from src.library_catalog.core.database import Base, get_db
@@ -15,13 +16,13 @@ from src.library_catalog.external.openlibrary import OpenLibraryClient
 
 # ========== Тестовая БД ==========
 
-# Используем SQLite для тестов
-TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
     echo=False,
-    connect_args={"check_same_thread": False}
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
 )
 
 TestAsyncSessionLocal = async_sessionmaker(
@@ -44,9 +45,16 @@ app.dependency_overrides[get_db] = override_get_db
 
 
 @pytest.fixture
+def anyio_backend():
+    """Настройка бекенда для anyio."""
+    return "asyncio"
+
+
+@pytest.fixture
 async def client():
     """Фикстура для HTTP клиента."""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
 
 
