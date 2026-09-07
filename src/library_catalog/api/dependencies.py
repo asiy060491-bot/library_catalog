@@ -74,3 +74,4 @@ async def get_book_service(
 BookServiceDep = Annotated[BookService, Depends(get_book_service)]
 BookRepoDep = Annotated[BookRepository, Depends(get_book_repository)]
 DbSessionDep = Annotated[AsyncSession, Depends(get_db)]
+OpenLibraryClientDep = Annotated[OpenLibraryClient, Depends(get_openlibrary_client)]

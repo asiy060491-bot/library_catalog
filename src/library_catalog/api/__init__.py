@@ -1,27 +1,27 @@
 """
 API слой приложения.
+
+Содержит роутеры, схемы и DI контейнер.
 """
 
-from .v1 import (
-    BookBase,
-    BookCreate,
-    BookUpdate,
-    ShowBook,
-    BookFilters,
-    PaginationParams,
-    PaginatedResponse,
-    HealthCheckResponse,
-    ErrorResponse,
+from .v1 import router
+from .dependencies import (
+    get_book_service,
+    get_book_repository,
+    get_openlibrary_client,
+    BookServiceDep,
+    BookRepoDep,
+    DbSessionDep,
+    OpenLibraryClientDep,
 )
 
 __all__ = [
-    "BookBase",
-    "BookCreate",
-    "BookUpdate",
-    "ShowBook",
-    "BookFilters",
-    "PaginationParams",
-    "PaginatedResponse",
-    "HealthCheckResponse",
-    "ErrorResponse",
+    "router",
+    "get_book_service",
+    "get_book_repository",
+    "get_openlibrary_client",
+    "BookServiceDep",
+    "BookRepoDep",
+    "DbSessionDep",
+    "OpenLibraryClientDep",
 ]
