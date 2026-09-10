@@ -114,17 +114,18 @@ class OpenLibraryException(AppException):
         )
 
 
-class OpenLibraryTimeoutException(AppException):
+class OpenLibraryTimeoutException(OpenLibraryException):
     """
     Исключение: таймаут при обращении к Open Library API.
-    
+
     Возникает когда время ожидания ответа от Open Library API
     превышает установленный лимит.
     """
+
     def __init__(self, timeout: float):
         """
-        Инициализация исключения.
-        
+        Инициализация исключения о таймауте.
+
         Args:
             timeout: Время таймаута в секундах
         """

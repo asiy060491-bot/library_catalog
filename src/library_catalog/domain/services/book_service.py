@@ -5,6 +5,10 @@ from ...external.openlibrary.client import OpenLibraryClient
 from ..exceptions import *
 from ..mappers.book_mapper import BookMapper
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class BookService:
     """
     Сервис для работы с книгами.
@@ -79,34 +83,39 @@ class BookService:
             raise BookNotFoundException(book_id)
         
         return BookMapper.to_show_book(book)
-    
+
     async def update_book(
-        self,
-        book_id: UUID,
-        book_data: BookUpdate,
+            self,
+            book_id: UUID,
+            book_data: BookUpdate,
     ) -> ShowBook:
         """
         Обновить книгу.
-        
-        Обновляются только переданные поля.
         """
-        # Проверить существование
+        # Проверить существование книги
         existing = await self.book_repo.get_by_id(book_id)
         if existing is None:
             raise BookNotFoundException(book_id)
-        
+
         # Валидация если обновляется год/страницы
         if book_data.year is not None:
             self._validate_year(book_data.year)
         if book_data.pages is not None:
             self._validate_pages(book_data.pages)
-        
-        # Обновить
-        updated = await self.book_repo.update(
-            book_id,
-            **book_data.dict(exclude_unset=True)
-        )
-        
+
+        # ===== ДОБАВИТЬ ПРОВЕРКУ УНИКАЛЬНОСТИ ISBN =====
+        if book_data.isbn is not None and book_data.isbn != existing.isbn:
+            existing_with_isbn = await self.book_repo.find_by_isbn(book_data.isbn)
+            if existing_with_isbn:
+                raise BookAlreadyExistsException(book_data.isbn)
+        # ================================================
+
+        # Подготовка данных для обновления
+        update_data = book_data.model_dump(exclude_unset=True)
+
+        # Обновить книгу
+        updated = await self.book_repo.update(book_id, **update_data)
+
         return BookMapper.to_show_book(updated)
     
     async def delete_book(self, book_id: UUID) -> None:
