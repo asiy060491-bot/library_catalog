@@ -63,5 +63,4 @@ Thumbs.db
 docker-compose.override.yml
 
 # Alembic
-alembic/versions/*.py
 !alembic/versions/__init__.py
